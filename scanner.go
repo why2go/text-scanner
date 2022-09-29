@@ -31,12 +31,13 @@ type TextProcessor interface {
 }
 
 type TrimResult struct {
-	TrimText []rune
-	Clips    []Clip
+	TrimText      []rune
+	OriginalIndex []int // 对应TrimIndex的每个rune在原字符串中的下标索引
+	Clips         []Clip
 }
 
 func (tr TrimResult) String() string {
-	return fmt.Sprintf("{%s, %v}", string(tr.TrimText), tr.Clips)
+	return fmt.Sprintf("{%s, %v, %v}", string(tr.TrimText), tr.Clips, tr.OriginalIndex)
 }
 
 type Clip struct {

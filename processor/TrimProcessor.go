@@ -31,11 +31,15 @@ func (p *TrimProcessor) Trim(rtext []rune) scanner.TrimResult {
 	matches = p.mergeMatches(matches)
 	fmt.Printf("merged matches: %v\n", matches)
 	var trimText []rune
+	var originalIndex []int
 	var clips []scanner.Clip
 	k := 0
 	for i := range matches {
 		s := len(trimText)
 		trimText = append(trimText, rtext[k:matches[i].S]...)
+		for j := k; j < matches[i].S; j++ {
+			originalIndex = append(originalIndex, j)
+		}
 		k = matches[i].E
 		clip := scanner.Clip{
 			Text: rtext[matches[i].S:matches[i].E],
@@ -46,10 +50,14 @@ func (p *TrimProcessor) Trim(rtext []rune) scanner.TrimResult {
 	}
 	if k < len(rtext) {
 		trimText = append(trimText, rtext[k:]...)
+		for i := k; i < len(rtext); i++ {
+			originalIndex = append(originalIndex, i)
+		}
 	}
 	result := scanner.TrimResult{
-		TrimText: trimText,
-		Clips:    clips,
+		TrimText:      trimText,
+		OriginalIndex: originalIndex,
+		Clips:         clips,
 	}
 	return result
 }
@@ -86,7 +94,7 @@ func (p *TrimProcessor) RestoreMatches(trimResult scanner.TrimResult, trimMatche
 	clips := trimResult.Clips
 	var matches []scanner.Match
 	for i := range clips {
-
+		fmt.Printf("i: %v\n", i)
 	}
 	return matches
 }
