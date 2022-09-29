@@ -8,8 +8,8 @@ type Scanner interface {
 
 type ScanResult struct {
 	FilteredText string
-	Label        string
-	Suggestion   string
+	// Label        string
+	// Suggestion   string
 }
 
 type Matcher interface {
@@ -27,7 +27,6 @@ func (m Match) String() string {
 
 type TextProcessor interface {
 	Trim(rtext []rune) TrimResult
-	RestoreMatches(TrimResult, []Match) []Match
 }
 
 type TrimResult struct {

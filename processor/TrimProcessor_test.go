@@ -29,4 +29,6 @@ func TestTrim(t *testing.T) {
 	fmt.Printf("tp.Trim(\"$$$$$  🏴󠁧󠁢󠁥󠁮󠁧󠁿 $$$\"): %v\n", tp.Trim([]rune("$$$$$  🏴󠁧󠁢󠁥󠁮󠁧󠁿 $$$")))
 	fmt.Println()
 	fmt.Printf("tp.Trim([]rune(\"f🚴u🚴‍♂️c🚴🏻‍♂️k$\")): %v\n", tp.Trim([]rune("f🚴u🚴‍♂️c🚴🏻‍♂️k$")))
+	fmt.Println()
+	fmt.Printf("tp.Trim([]rune(\"f👴🏻u👴🏻c👴🏻k👴🏻\")): %v\n", tp.Trim([]rune("f👴🏻u👴🏻c👴🏻k👴🏻")))
 }

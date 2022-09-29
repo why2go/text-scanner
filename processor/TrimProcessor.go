@@ -1,11 +1,9 @@
 package processor
 
 import (
-	"fmt"
-	"sort"
-
 	scanner "gitee.com/piecat/text-scanner"
 	"gitee.com/piecat/text-scanner/internal/trie"
+	"gitee.com/piecat/text-scanner/internal/util"
 )
 
 type TrimProcessor struct {
@@ -25,11 +23,12 @@ func (p *TrimProcessor) AddIgnoredText(text string) {
 	p.ignoredTextTrie.Put(rtext)
 }
 
+// 去除原始文本中的所有干扰字符
 func (p *TrimProcessor) Trim(rtext []rune) scanner.TrimResult {
 	matches := p.ignoredTextTrie.FindMatches(rtext)
-	fmt.Printf("origin matches: %v\n", matches)
-	matches = p.mergeMatches(matches)
-	fmt.Printf("merged matches: %v\n", matches)
+	// fmt.Printf("origin matches: %v\n", matches)
+	matches = util.MergeOrderedMatches(matches)
+	// fmt.Printf("merged matches: %v\n", matches)
 	var trimText []rune
 	var originalIndex []int
 	var clips []scanner.Clip
@@ -60,41 +59,4 @@ func (p *TrimProcessor) Trim(rtext []rune) scanner.TrimResult {
 		Clips:         clips,
 	}
 	return result
-}
-
-func (p *TrimProcessor) mergeMatches(matches []scanner.Match) []scanner.Match {
-	if len(matches) == 0 || len(matches) == 1 {
-		return matches
-	}
-	sort.Slice(matches[:], func(i, j int) bool { return matches[i].S < matches[j].S })
-	fmt.Printf("sorted matches: %v\n", matches)
-	var mergedMatches []scanner.Match
-	s0 := matches[0].S
-	e0 := matches[0].E
-	for i := 1; i < len(matches); i++ {
-		s1 := matches[i].S
-		e1 := matches[i].E
-		if s1 <= e0 {
-			if e0 < e1 {
-				e0 = e1
-			}
-		} else {
-			mergedMatches = append(mergedMatches, scanner.Match{S: s0, E: e0})
-			s0 = s1
-			e0 = e1
-		}
-	}
-	mergedMatches = append(mergedMatches, scanner.Match{S: s0, E: e0})
-	return mergedMatches
-}
-
-// 将trim后的文本得到的matches，还原为原始文本的matches
-func (p *TrimProcessor) RestoreMatches(trimResult scanner.TrimResult, trimMatches []scanner.Match) []scanner.Match {
-	// tp.Trim([]rune("f$u$$c$$ $$k$$$")): {fuck, [{$, [0, 1)} {$$, [1, 2)} {$$ $$, [2, 3)} {$$$, [3, 4)}]}
-	clips := trimResult.Clips
-	var matches []scanner.Match
-	for i := range clips {
-		fmt.Printf("i: %v\n", i)
-	}
-	return matches
 }
