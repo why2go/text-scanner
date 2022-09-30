@@ -2,11 +2,20 @@ package scanner
 
 import "fmt"
 
+var (
+	ErrTextTooLong = fmt.Errorf("text exceeds %d bytes", TextLengthLimit)
+)
+
+const (
+	TextLengthLimit = int(10000)
+)
+
 type Scanner interface {
-	Scan(text string) ScanResult
+	Scan(text string) (ScanResult, error)
 }
 
 type ScanResult struct {
+	Err          error
 	FilteredText string
 	// Label        string
 	// Suggestion   string

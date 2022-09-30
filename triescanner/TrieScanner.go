@@ -33,9 +33,12 @@ func NewTrieScanner(
 	return ts
 }
 
-func (ts *TrieScanner) Scan(text string) scanner.ScanResult {
+func (ts *TrieScanner) Scan(text string) (scanner.ScanResult, error) {
 	if len(text) == 0 {
-		return scanner.ScanResult{FilteredText: text}
+		return scanner.ScanResult{FilteredText: text}, nil
+	}
+	if len(text) > scanner.TextLengthLimit {
+		return scanner.ScanResult{}, scanner.ErrTextTooLong
 	}
 	rtext := []rune(text)
 	trimResult := ts.trimProcessor.Trim(rtext)
@@ -69,5 +72,5 @@ func (ts *TrieScanner) Scan(text string) scanner.ScanResult {
 	scanResult := scanner.ScanResult{
 		FilteredText: string(rtext),
 	}
-	return scanResult
+	return scanResult, nil
 }
