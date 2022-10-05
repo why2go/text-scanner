@@ -44,5 +44,5 @@ func (v *Validator) notTokenCodePoint(r rune) bool {
 		// unicode.IsControl(r) ||
 		unicode.IsSymbol(r) ||
 		unicode.IsMark(r) ||
-		unicode.In(r, unicode.Han, unicode.Hangul, unicode.Hiragana)
+		v.isEastAsianCodePoint(r)
 }

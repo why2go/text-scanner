@@ -12,10 +12,6 @@ import (
 // 2. construct suffix links, and
 // 3. construct output links.
 
-// goto functin: g
-// failure functin: f
-// output function: output
-
 func NewACTrie() *ACTrie {
 	t := &ACTrie{
 		root: newNode(),

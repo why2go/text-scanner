@@ -3,18 +3,29 @@ package processor
 import (
 	"fmt"
 	"testing"
+
+	"gitee.com/piecat/text-scanner/matcher/actrie"
 )
 
 func TestPreProcessor(t *testing.T) {
-	tp := NewConfusingCharProcessor()
+	confusingCharMatcher := actrie.NewACTrie()
+	confusingCharMatcher.Put([]rune(" "))
+	confusingCharMatcher.Put([]rune("$"))
+	confusingCharMatcher.Put([]rune("+"))
+	confusingCharMatcher.Put([]rune("@"))
+	confusingCharMatcher.Put([]rune("#"))
+	confusingCharMatcher.Put([]rune("%"))
+	confusingCharMatcher.Put([]rune("&"))
+	confusingCharMatcher.Put([]rune("*"))
+	confusingCharMatcher.Put([]rune("🏴󠁧󠁢󠁥󠁮󠁧󠁿"))
+	confusingCharMatcher.Put([]rune("🚴"))
+	confusingCharMatcher.Put([]rune("🚴🏻"))
+	confusingCharMatcher.Put([]rune("🚴‍♂️"))
+	confusingCharMatcher.Put([]rune("🚴🏻‍♂️"))
 
-	tp.AddIgnoredText(" ")
-	tp.AddIgnoredText("$")
-	tp.AddIgnoredText("🏴󠁧󠁢󠁥󠁮󠁧󠁿")
-	tp.AddIgnoredText("🚴")
-	tp.AddIgnoredText("🚴🏻")
-	tp.AddIgnoredText("🚴‍♂️")
-	tp.AddIgnoredText("🚴🏻‍♂️")
+	confusingCharMatcher.ConstructFailureLinks()
+
+	tp := NewConfusingCharProcessor(confusingCharMatcher)
 
 	fmt.Printf("tp.Process([]rune(\"f u c k\")): %v\n", tp.Process([]rune("f u c k")))
 	fmt.Println()
