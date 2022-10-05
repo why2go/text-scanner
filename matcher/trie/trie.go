@@ -21,7 +21,7 @@ func NewTrie() *Trie {
 	return t
 }
 
-// 用循环的方式，将key加入到trie
+// 将key加入到trie
 func (t *Trie) Put(rkey []rune) {
 	if len(rkey) == 0 {
 		return

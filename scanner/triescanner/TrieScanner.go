@@ -2,27 +2,18 @@ package triescanner
 
 import (
 	scanner "gitee.com/piecat/text-scanner"
-	"gitee.com/piecat/text-scanner/internal/util"
+	"gitee.com/piecat/text-scanner/util"
 )
-
-// 问题：
-// 1. 对于干扰字符，在检查text之前做了去除，要考虑干扰字符集的更新对于屏蔽词库的影响，
-// 因为可能添加的屏蔽词中包含干扰字符，比如 f*c*u*k，作为屏蔽词加入了词库，那么一开始是能
-// 检测出f*c*u*k的，但是如果，此时把*设置为干扰字符，那么送检的词就变成了fuck，因为屏蔽词不是fuck，则无法检测出fuck
-
-// 2. 书写系统，构词方法
-
-// 3. 词库的更新
 
 type TrieScanner struct {
 	keyWordMatcher scanner.Matcher
-	trimProcessor  scanner.TextProcessor
+	trimProcessor  scanner.PreProcessor
 	tokenValidator scanner.TokenValidator
 }
 
 func NewTrieScanner(
 	keyWordMatcher scanner.Matcher,
-	trimProcessor scanner.TextProcessor,
+	trimProcessor scanner.PreProcessor,
 	tokenValidator scanner.TokenValidator,
 ) *TrieScanner {
 	ts := &TrieScanner{
@@ -37,11 +28,8 @@ func (ts *TrieScanner) Scan(text string) (scanner.ScanResult, error) {
 	if len(text) == 0 {
 		return scanner.ScanResult{FilteredText: text}, nil
 	}
-	if len(text) > scanner.TextLengthLimit {
-		return scanner.ScanResult{}, scanner.ErrTextTooLong
-	}
 	rtext := []rune(text)
-	trimResult := ts.trimProcessor.Trim(rtext)
+	trimResult := ts.trimProcessor.Process(rtext)
 	trimMatches := ts.keyWordMatcher.FindMatches(trimResult.TrimText)
 	// 将trimMatches转换为original matches
 	var originalMatches []scanner.Match

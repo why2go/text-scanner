@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"unicode"
 
 	scanner "gitee.com/piecat/text-scanner"
@@ -23,6 +24,7 @@ func (v *Validator) isEastAsianCodePoint(r rune) bool {
 }
 
 func (v *Validator) isToken(rtext []rune, match scanner.Match) bool {
+	fmt.Printf("rtext[match.S:match.E]: %s\n", string(rtext[match.S:match.E]))
 	l := match.S
 	r := match.E - 1
 	var lmatched bool
@@ -39,8 +41,8 @@ func (v *Validator) isToken(rtext []rune, match scanner.Match) bool {
 func (v *Validator) notTokenCodePoint(r rune) bool {
 	return unicode.IsSpace(r) ||
 		unicode.IsPunct(r) ||
-		unicode.IsControl(r) ||
+		// unicode.IsControl(r) ||
 		unicode.IsSymbol(r) ||
-		unicode.IsGraphic(r) ||
+		unicode.IsMark(r) ||
 		unicode.In(r, unicode.Han, unicode.Hangul, unicode.Hiragana)
 }

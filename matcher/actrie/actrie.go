@@ -3,6 +3,8 @@ package actrie
 import (
 	"container/list"
 	"sync"
+
+	scanner "gitee.com/piecat/text-scanner"
 )
 
 // 实现 Aho-Corasick automaton
@@ -14,10 +16,7 @@ import (
 // failure functin: f
 // output function: output
 
-// 前缀树，输入是utf8编码的string，构建时使用rune，便于根据unicode标准来判断字符类型
-// 暂时使用读写锁对整个trie做并发控制
-
-func NewTrie() *ACTrie {
+func NewACTrie() *ACTrie {
 	t := &ACTrie{
 		root: newNode(),
 		size: 0,
@@ -39,13 +38,11 @@ func (t *ACTrie) Put(rkey []rune) {
 	t.rwmu.Lock()
 	defer t.rwmu.Unlock()
 	curNode := t.root
-	// 使用循环来添加
 	for i := range rkey {
 		cp := rkey[i]
 		nextNode, ok := curNode.next[cp]
 		if !ok {
 			nextNode = newNode()
-			nextNode.parent = curNode
 			nextNode.cp = cp
 			curNode.next[cp] = nextNode
 		}
@@ -54,35 +51,36 @@ func (t *ACTrie) Put(rkey []rune) {
 	if !curNode.isTerminal {
 		t.size++
 		curNode.isTerminal = true
-		curNode.outputs = append(curNode.outputs, rkey)
+		curNode.suffixLengths = append(curNode.suffixLengths, len(rkey))
 	}
 }
 
-// 找出text中包含的key
-
-type Match struct {
-	Start int
-	End   int
-}
-
-func (t *ACTrie) FindMatches(rtext []rune) []Match {
+func (t *ACTrie) FindMatches(rtext []rune) []scanner.Match {
 	if len(rtext) == 0 {
 		return nil
 	}
 	t.rwmu.RLock()
 	defer t.rwmu.RUnlock()
-	curNode := t.root
-	// 在这里做输出
-	for _, cp := range rtext {
-		nextNode, ok := curNode.next[cp]
-		if ok {
-			curNode = nextNode
+	state := t.root
+	var matches []scanner.Match
+	for i := range rtext {
+		cp := rtext[i]
+		for _, ok := state.next[cp]; !ok; _, ok = state.next[cp] {
+			if state == t.root {
+				break
+			}
+			state = state.failure
+		}
+		state = state.next[cp]
+		if state != nil {
+			for _, l := range state.suffixLengths {
+				matches = append(matches, scanner.Match{S: i - l + 1, E: i + 1})
+			}
 		} else {
-			curNode = curNode.failure
+			state = t.root
 		}
 	}
-
-	return nil
+	return matches
 }
 
 func (t *ACTrie) Contains(rkey []rune) bool {
@@ -91,18 +89,15 @@ func (t *ACTrie) Contains(rkey []rune) bool {
 	}
 	t.rwmu.RLock()
 	defer t.rwmu.RUnlock()
-	return t.contains(t.root, rkey, 0)
-}
-
-func (t *ACTrie) contains(node *node, rkey []rune, idx int) bool {
-	if node == nil {
-		return false
+	curNode := t.root
+	for i := range rkey {
+		nextNode, ok := curNode.next[rkey[i]]
+		if !ok {
+			return false
+		}
+		curNode = nextNode
 	}
-	if idx == len(rkey) {
-		return node.isTerminal
-	}
-	b := rkey[idx]
-	return t.contains(node.next[b], rkey, idx+1)
+	return curNode.isTerminal
 }
 
 // 构建failure link
@@ -126,6 +121,7 @@ func (t *ACTrie) ConstructFailureLinks() {
 				nextFailure, ok := curFailure.next[cp]
 				if ok {
 					nextNode.failure = nextFailure
+					nextNode.suffixLengths = append(nextNode.suffixLengths, nextFailure.suffixLengths...)
 					break
 				} else {
 					if curFailure == t.root {
@@ -156,12 +152,11 @@ func (t *ACTrie) Size() uint32 {
 
 // 前缀树中的节点类型
 type node struct {
-	cp         rune
-	isTerminal bool
-	parent     *node
-	next       map[rune]*node
-	failure    *node
-	outputs    [][]rune
+	cp            rune
+	isTerminal    bool
+	next          map[rune]*node
+	failure       *node
+	suffixLengths []int // 用于找到matches
 }
 
 func newNode() *node {
@@ -170,8 +165,4 @@ func newNode() *node {
 		next:       make(map[rune]*node, 0),
 	}
 	return n
-}
-
-func (n *node) hasChildren() bool {
-	return len(n.next) != 0
 }

@@ -2,33 +2,31 @@ package processor
 
 import (
 	scanner "gitee.com/piecat/text-scanner"
-	"gitee.com/piecat/text-scanner/internal/trie"
-	"gitee.com/piecat/text-scanner/internal/util"
+	"gitee.com/piecat/text-scanner/util"
 )
 
-type TrimProcessor struct {
-	ignoredTextTrie *trie.Trie
+// 处理停顿字符（干扰字符）
+type ConfusingCharProcessor struct {
+	matcher scanner.Matcher
 }
 
-func NewTrimProcessor() *TrimProcessor {
-	p := &TrimProcessor{
-		ignoredTextTrie: trie.NewTrie(),
+func NewConfusingCharProcessor(matcher scanner.Matcher) *ConfusingCharProcessor {
+	p := &ConfusingCharProcessor{
+		matcher: matcher,
 	}
 	return p
 }
 
-// 将想要在文本扫描中被忽略的字符加入到字典树中，用于检出这些字符
-func (p *TrimProcessor) AddIgnoredText(text string) {
-	rtext := []rune(text)
-	p.ignoredTextTrie.Put(rtext)
-}
+// // 将想要在文本扫描中被忽略的字符加入到字典树中，用于检出这些字符，需要在Proecess前调用
+// func (p *ConfusingCharProcessor) AddIgnoredText(text string) {
+// 	rtext := []rune(text)
+// 	p.confusingTextTrie.Put(rtext)
+// }
 
 // 去除原始文本中的所有干扰字符
-func (p *TrimProcessor) Trim(rtext []rune) scanner.TrimResult {
-	matches := p.ignoredTextTrie.FindMatches(rtext)
-	// fmt.Printf("origin matches: %v\n", matches)
+func (p *ConfusingCharProcessor) Process(rtext []rune) scanner.PreProcessResult {
+	matches := p.matcher.FindMatches(rtext)
 	matches = util.MergeOrderedMatches(matches)
-	// fmt.Printf("merged matches: %v\n", matches)
 	var trimText []rune
 	var originalIndex []int
 	var clips []scanner.Clip
@@ -53,7 +51,7 @@ func (p *TrimProcessor) Trim(rtext []rune) scanner.TrimResult {
 			originalIndex = append(originalIndex, i)
 		}
 	}
-	result := scanner.TrimResult{
+	result := scanner.PreProcessResult{
 		TrimText:      trimText,
 		OriginalIndex: originalIndex,
 		Clips:         clips,

@@ -26,4 +26,5 @@ func TestACTrie(t *testing.T) {
 
 	fmt.Printf("at.FindMatches([]rune(\"abccab\")): %v\n", at.FindMatches([]rune("abccab")))
 	fmt.Printf("at.FindMatches([]rune(\"dabcdceab\")): %v\n", at.FindMatches([]rune("dabcdceab")))
+	fmt.Printf("at.FindMatches([]rune(\"have\")): %v\n", at.FindMatches([]rune("have")))
 }
